@@ -1,0 +1,1 @@
+cmd_/home/workspace/IMX6/src/linux_driver/i2c_driver/built-in.o :=  rm -f /home/workspace/IMX6/src/linux_driver/i2c_driver/built-in.o; /home/workspace/IMX6/src/gcc-linaro-arm-linux-gnueabihf-4.9-2014.09_linux/bin/arm-linux-gnueabihf-ar rcsD /home/workspace/IMX6/src/linux_driver/i2c_driver/built-in.o

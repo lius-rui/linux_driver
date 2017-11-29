@@ -1,0 +1,14 @@
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/slab.h>
+#include <linux/delay.h>
+#include <linux/mutex.h>
+#include <linux/sysfs.h>
+#include <linux/mod_devicetable.h>
+#include <linux/log2.h>
+#include <linux/bitops.h>
+#include <linux/jiffies.h>
+#include <linux/of.h>
+#include <linux/i2c.h>
+#include <linux/platform_data/at24.h>
