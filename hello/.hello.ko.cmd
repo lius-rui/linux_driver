@@ -1,0 +1,1 @@
+cmd_/home/liushuang/workspace/study/linux_driver/hello/hello.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/liushuang/workspace/study/linux_driver/hello/hello.ko /home/liushuang/workspace/study/linux_driver/hello/hello.o /home/liushuang/workspace/study/linux_driver/hello/hello.mod.o ;  true
