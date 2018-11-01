@@ -10,7 +10,7 @@
 #define MEM_CLEAR  0x01
 #define GLOBALMEM_MAJOR   230 //主设备号
 #define GLOBALMEM_MAGIC  'g'  //幻数
-#define MEM_CLEAR _IO(GLOBALMEM_MAGIC,0)  //清空内存的ioctl命令
+#define MEM_CLEAR  _IO(GLOBALMEM_MAGIC,0)  //清空内存的ioctl命令
 #define DEVICE_NUM  10  //最多同时支持10个同类设备
 
 static int globalmem_major = GLOBALMEM_MAJOR;
@@ -18,7 +18,8 @@ module_param(globalmem_major,int,S_IRUGO);
 
 //自定义的字符设备结构体
 
-struct globalmem_dev{
+struct globalmem_dev
+{
 	struct cdev cdev;//内核自带的字符设备
 	unsigned char mem[MEM_SIZE];  //开辟的内存空间大小
 };
@@ -181,7 +182,7 @@ static int __init globalmem_init(void)
 		return ret;
 	}
 
-	globalmem_devp = kmalloc(sizeof(struct globalmem_dev),GFP_KERNEL);
+	globalmem_devp = kmalloc(sizeof(struct globalmem_dev)*DEVICE_NUM,GFP_KERNEL);
 	if(!globalmem_devp){
 
 		ret = -ENOMEM;

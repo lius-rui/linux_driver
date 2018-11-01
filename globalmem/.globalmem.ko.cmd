@@ -1,1 +1,0 @@
-cmd_/home/liushuang/workspace/study/linux_driver/globalmem/globalmem.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/liushuang/workspace/study/linux_driver/globalmem/globalmem.ko /home/liushuang/workspace/study/linux_driver/globalmem/globalmem.o /home/liushuang/workspace/study/linux_driver/globalmem/globalmem.mod.o ;  true
