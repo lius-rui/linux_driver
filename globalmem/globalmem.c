@@ -12,6 +12,7 @@
 #define GLOBALMEM_MAGIC  'g'  //幻数
 #define MEM_CLEAR  _IO(GLOBALMEM_MAGIC,0)  //清空内存的ioctl命令
 #define DEVICE_NUM  10  //最多同时支持10个同类设备
+#define barrier()  __asm__ __volatile__("": : :"memory")
 
 static int globalmem_major = GLOBALMEM_MAJOR;
 module_param(globalmem_major,int,S_IRUGO);
@@ -22,6 +23,7 @@ struct globalmem_dev
 {
 	struct cdev cdev;//内核自带的字符设备
 	unsigned char mem[MEM_SIZE];  //开辟的内存空间大小
+	struct mutex my_mutex;  //互斥体，应为本驱动会使用可能阻塞的函数，所以使用互斥体而不是自旋锁
 };
 
 struct globalmem_dev *globalmem_devp;  //设备结构体指针，后面会赋值给私有数据使用
@@ -40,6 +42,7 @@ static ssize_t globalmem_read(struct  file *filp, char __user *buf, size_t size,
 	if(count > MEM_SIZE - p) //最大读取数据量
 		count  = MEM_SIZE - p;
 
+	mutex_lock(&dev->my_mutex);
 	if(copy_to_user(buf,dev->mem + p, count))
 	{
 		return -EFAULT;
@@ -50,6 +53,8 @@ static ssize_t globalmem_read(struct  file *filp, char __user *buf, size_t size,
 		ret = count;
 		printk(KERN_INFO"read data ok!\n");
 	}
+	mutex_unlock(&dev->my_mutex);
+
 	return ret;
 }
 
@@ -64,6 +69,8 @@ static ssize_t globalmem_write(struct file *filp, const char __user *buf,size_t 
 		return 0;
 	if(count > MEM_SIZE - p)
 		count = MEM_SIZE -p;
+
+	mutex_lock(&dev->my_mutex); //获取互斥体
 	if(copy_from_user(dev->mem, buf, count))
 	{
 		return -EFAULT;
@@ -74,6 +81,8 @@ static ssize_t globalmem_write(struct file *filp, const char __user *buf,size_t 
 		ret = count;
 		printk(KERN_INFO"write data ok!\r\n");
 	}
+
+	mutex_unlock(&dev->my_mutex); //写完成，释放互斥体
 	return ret;
 }
 
@@ -114,7 +123,9 @@ static long globalmem_ioctl(struct file *filp,unsigned int cmd,unsigned long arg
 	switch(cmd)
 	{
 	case MEM_CLEAR:
+		mutex_lock(&dev->my_mutex);
 		memset(dev->mem,0,MEM_SIZE);
+		mutex_unlock(&dev->my_mutex);
 		printk(KERN_INFO"globalmem is set zero\n");
 		break;
 	default:
@@ -170,7 +181,9 @@ static int __init globalmem_init(void)
 {
 
 	int ret,i;
+	local_irq_disable();  //屏蔽中断，进入临界区
 	dev_t devno = MKDEV(globalmem_major,0); //合成设备号
+	local_irq_enable();   //开中断
 	if(globalmem_major)
 		ret = register_chrdev_region(devno,DEVICE_NUM,"globalmem");
 	else{
@@ -189,6 +202,7 @@ static int __init globalmem_init(void)
 		goto fail_malloc;
 
 	}
+	mutex_init(&globalmem_devp->my_mutex);  //初始化设备的互斥体 
 	for(i = 0; i<DEVICE_NUM; i++)
 		globalmem_setup_cdev(globalmem_devp + i,i);
 	return  0;
