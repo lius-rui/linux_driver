@@ -19,7 +19,7 @@ static int globalmem_major = GLOBALMEM_MAJOR;
 module_param(globalmem_major,int,S_IRUGO);
 
 //自定义的字符设备结构体
-
+//testetetettetet
 struct globalmem_dev
 {
 	struct cdev cdev;//内核自带的字符设备
