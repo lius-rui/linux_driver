@@ -5,6 +5,7 @@
 #include <linux/cdev.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
+#include <linux/poll.h>
 
 #define MEM_SIZE  0x1000 //４Ｋ
 #define MEM_CLEAR  0x01
@@ -207,6 +208,30 @@ static int globalmem_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
+static unsigned int globalmem_poll(struct file *filp, poll_table *wait)
+{
+	unsigned int mask = 0;
+	struct globalmem_dev *dev = filp->private_data;
+
+	mutex_lock(&dev->my_mutex);
+	poll_wait(filp, &dev->r_wait,wait);
+	poll_wait(filp, &dev->w_wait,wait);
+
+	if(dev->current_len != 0)
+	{
+		mask |= POLLIN | POLLRDNORM;
+	}
+
+	if(dev->current_len != MEM_SIZE)
+	{
+		mask |= POLLOUT | POLLWRNORM;
+	}
+
+	mutex_unlock(&dev->my_mutex);
+	return mask;
+
+
+}
 
 //设备驱动到系统调用的映射,由ＶＦＳ完成
 static const struct file_operations globalmem_fops = {
@@ -218,6 +243,7 @@ static const struct file_operations globalmem_fops = {
 	.unlocked_ioctl = globalmem_ioctl,
 	.open = globalmem_open,
 	.release = globalmem_release,
+	.poll = globalmem_poll,
 
 
 };
