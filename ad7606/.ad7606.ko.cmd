@@ -1,0 +1,1 @@
+cmd_/home/workspace/LH-APP/ad7606-2/ad7606.ko := /home/workspace/TI-SDK/linux-devkit/sysroots/x86_64-arago-linux/usr/bin/arm-linux-gnueabihf-ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/workspace/LH-APP/ad7606-2/ad7606.ko /home/workspace/LH-APP/ad7606-2/ad7606.o /home/workspace/LH-APP/ad7606-2/ad7606.mod.o

@@ -1,0 +1,1 @@
+cmd_/home/workspace/LH-APP/ad7606-2/built-in.o :=  rm -f /home/workspace/LH-APP/ad7606-2/built-in.o; /home/workspace/TI-SDK/linux-devkit/sysroots/x86_64-arago-linux/usr/bin/arm-linux-gnueabihf-ar rcsD /home/workspace/LH-APP/ad7606-2/built-in.o
