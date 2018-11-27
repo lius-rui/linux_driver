@@ -6,7 +6,7 @@
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 #include <linux/poll.h>
-
+////
 #define MEM_SIZE  0x1000 //４Ｋ
 #define MEM_CLEAR  0x01
 #define GLOBALMEM_MAJOR   230 //主设备号
