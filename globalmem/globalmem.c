@@ -6,6 +6,15 @@
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 #include <linux/poll.h>
+#include <linux/vmalloc.h>
+#include <asm/atomic.h>
+#include <asm/uaccess.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/device.h>
+#include <linux/hrtimer.h>
+#include <linux/jiffies.h>
+#include <linux/sysfs.h>
 ////
 #define MEM_SIZE  0x1000 //４Ｋ
 #define MEM_CLEAR  0x01
@@ -28,6 +37,7 @@ struct globalmem_dev
 	struct mutex my_mutex;  //互斥体，应为本驱动会使用可能阻塞的函数，所以使用互斥体而不是自旋锁
 	wait_queue_head_t r_wait; //读等待队列头
 	wait_queue_head_t w_wait; //写等待队列头
+	struct fasync_struct *async_queue;   //异步IO的结构体
 };
 
 struct globalmem_dev *globalmem_devp;  //设备结构体指针，后面会赋值给私有数据使用
@@ -137,6 +147,11 @@ static ssize_t globalmem_write(struct file *filp, const char __user *buf,size_t 
 		dev->current_len = dev->current_len + count;
 		printk(KERN_INFO"write data ok!\r\n");
 		wake_up_interruptible(&dev->r_wait);  //写数据完成，唤醒读操作
+		if(dev->async_queue)   //增加异步通知部分
+		{
+			kill_fasync(&dev->async_queue,SIGIO,POLL_IN);  //如果设备可读了，通知应用进程
+			printk(KERN_DEBUG "%s kill SIGIO \n",__func__);
+		}
 		ret = count;
 	}
 	out:
@@ -202,9 +217,18 @@ static int globalmem_open(struct inode *inode, struct file *filp)
 	filp->private_data = dev;
 	return 0;
 }
+//内核实现支持异步IO的操作
+static int globalmem_fasync(int fd , struct file *filp , int mode)
+{
+	struct globalmem_dev *dev = filp->private_data;
+	return fasync_helper(fd,filp,mode,&dev->async_queue);
+
+}
+
 
 static int globalmem_release(struct inode *inode, struct file *filp)
 {
+	globalmem_fasync(-1,filp,0);
 	return 0;
 }
 
@@ -230,8 +254,9 @@ static unsigned int globalmem_poll(struct file *filp, poll_table *wait)
 	mutex_unlock(&dev->my_mutex);
 	return mask;
 
-
 }
+
+
 
 //设备驱动到系统调用的映射,由ＶＦＳ完成
 static const struct file_operations globalmem_fops = {
@@ -244,6 +269,7 @@ static const struct file_operations globalmem_fops = {
 	.open = globalmem_open,
 	.release = globalmem_release,
 	.poll = globalmem_poll,
+	.fasync = globalmem_fasync,
 
 
 };
