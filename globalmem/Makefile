@@ -1,6 +1,7 @@
 KVERS = $(shell uname -r)
 
 obj-m += globalmem.o
+obj-m += interrupt.o
 
 build: kernel_modules
 
